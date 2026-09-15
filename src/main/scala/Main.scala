@@ -11,7 +11,9 @@ import com.appkitbox.winui4k.{
   ContentDialogButton,
   WinUiUtilities,
   WDimension,
-  GridLength
+  GridLength,
+  VirtualKey,
+  VirtualKeyModifier
 }
 import java.nio.file.{Files, Paths}
 import KotlinInterop.given
@@ -111,6 +113,7 @@ import KotlinInterop.given
     // [ファイル] メニューの各項目を構築
 
     val newItem = new WMenuFlyoutItem("新規", null)
+    newItem.setKeyboardAcceleratorText("Ctrl+N")
     newItem.addActionListener { () =>
       textArea.setText("")
       currentFile = None
@@ -118,6 +121,7 @@ import KotlinInterop.given
     }
 
     val openItem = new WMenuFlyoutItem("開く", null)
+    openItem.setKeyboardAcceleratorText("Ctrl+O")
     openItem.addActionListener { () =>
       showOpenDialog()
     }
@@ -154,6 +158,7 @@ import KotlinInterop.given
       )
 
     val saveItem = new WMenuFlyoutItem("上書き保存", null)
+    saveItem.setKeyboardAcceleratorText("Ctrl+S")
     saveItem.addActionListener { () =>
       // 既にファイルが関連付けられていれば上書き、なければ「名前を付けて保存」と同じ動作
       currentFile match
@@ -162,9 +167,39 @@ import KotlinInterop.given
     }
 
     val saveAsItem = new WMenuFlyoutItem("名前を付けて保存", null)
+    saveAsItem.setKeyboardAcceleratorText("Ctrl+Shift+S")
     saveAsItem.addActionListener { () =>
       showSaveAsDialog()
     }
+
+    // テキストエリアにキーボードショートカットを登録する
+    textArea.addKeyboardAccelerator(
+      VirtualKey.N,
+      Array(VirtualKeyModifier.CONTROL),
+      () => {
+        textArea.setText("")
+        currentFile = None
+        frame.setTitle(s"無題 - $appName")
+      }
+    )
+    textArea.addKeyboardAccelerator(
+      VirtualKey.O,
+      Array(VirtualKeyModifier.CONTROL),
+      () => showOpenDialog()
+    )
+    textArea.addKeyboardAccelerator(
+      VirtualKey.S,
+      Array(VirtualKeyModifier.CONTROL),
+      () =>
+        currentFile match
+          case Some(path) => saveTo(path)
+          case None       => showSaveAsDialog()
+    )
+    textArea.addKeyboardAccelerator(
+      VirtualKey.S,
+      Array(VirtualKeyModifier.CONTROL, VirtualKeyModifier.SHIFT),
+      () => showSaveAsDialog()
+    )
 
     // [ファイル] メニューを組み立てる
     val fileMenu = new WMenuBarItem("ファイル")

@@ -35,3 +35,17 @@ object KotlinInterop:
   given Conversion[Unit, kotlin.Unit] with
     def apply(x: Unit): kotlin.Unit =
       kotlin.Unit.INSTANCE
+
+  /** Scala の `() => Unit` から Kotlin の `Function0<Unit>` への暗黙的な変換。
+    *
+    * `import KotlinInterop.given` でスコープに入れることで、 Kotlin の `Function0<Unit>`
+    * を要求するコールバック API に対して、 通常の引数なし Scala 関数をそのまま渡せる。
+    *
+    * @return
+    *   `kotlin.Unit` を返す Kotlin の `Function0`
+    */
+  given Conversion[() => Unit, kotlin.jvm.functions.Function0[kotlin.Unit]] with
+    def apply(f: () => Unit): kotlin.jvm.functions.Function0[kotlin.Unit] =
+      () =>
+        f()
+        kotlin.Unit.INSTANCE
