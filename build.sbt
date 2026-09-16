@@ -12,9 +12,9 @@ lazy val root = project
 
     assembly / mainClass := Some("main"),
     assembly / assemblyJarName := "scala-winui4k-example-assembly.jar",
-    assembly / assemblyOutputPath := baseDirectory.value / "scala-winui4k-example-assembly.jar",
+    assembly / target := baseDirectory.value,
     assembly / assemblyMergeStrategy := {
-      case PathList(ps @ _*) if ps.last endsWith "module-info.class" =>
+      case PathList(ps @ _*) if ps.last.endsWith("module-info.class") =>
         MergeStrategy.discard
       case x =>
         val oldStrategy = (assembly / assemblyMergeStrategy).value
