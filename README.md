@@ -6,4 +6,8 @@
 
 ```powershell
 sbt run
+
+# or
+sbt assembly
+java -jar .\scala-winui4k-example-assembly.jar
 ```
