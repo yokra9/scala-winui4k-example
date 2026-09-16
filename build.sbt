@@ -10,6 +10,17 @@ lazy val root = project
 
     fork := true,
 
+    assembly / mainClass := Some("main"),
+    assembly / assemblyJarName := "scala-winui4k-example-assembly.jar",
+    assembly / assemblyOutputPath := baseDirectory.value / "scala-winui4k-example-assembly.jar",
+    assembly / assemblyMergeStrategy := {
+      case PathList(ps @ _*) if ps.last endsWith "module-info.class" =>
+        MergeStrategy.discard
+      case x =>
+        val oldStrategy = (assembly / assemblyMergeStrategy).value
+        oldStrategy(x)
+    },
+
     libraryDependencies ++= Seq(
       "com.appkitbox.winui4k" % "winui4k-all" % "0.1.0"
     )
