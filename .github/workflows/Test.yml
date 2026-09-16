@@ -23,8 +23,48 @@ jobs:
         distribution: 'temurin'
         cache: 'sbt'
 
-    - name: Install sbt
-      run: choco install sbt -y --force
+    - name: Install the latest Windows App SDK Runtime
+      uses: enda-mullally/Install-WindowsAppSDKRuntime@v1.1
+      with:
+        experimental: false
 
-    - name: Compile
-      run: sbt compile
+    - name: Build fat JAR
+      run: sbt assembly
+
+    - name: Run GUI smoke test
+      shell: pwsh
+      run: |
+        $proc = Start-Process java -ArgumentList "-jar", "scala-winui4k-example-assembly.jar" -RedirectStandardOutput 'out.log' -RedirectStandardError 'err.log' -PassThru
+
+        # アプリが起動するまで待機
+        Start-Sleep -Seconds 5
+
+        if ($proc.HasExited) {
+          Write-Host "Process exited early with code $($proc.ExitCode)"
+          Write-Host "=== stdout ==="
+          Get-Content 'out.log'
+          Write-Host "=== stderr ==="
+          Get-Content 'err.log'
+          exit $proc.ExitCode
+        }
+
+        # 10秒間生存確認
+        Start-Sleep -Seconds 10
+        $alive = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
+        if (-not $alive) {
+          Write-Host "App process exited before 10 seconds"
+          Write-Host "=== stdout ==="
+          Get-Content 'out.log'
+          Write-Host "=== stderr ==="
+          Get-Content 'err.log'
+          exit 1
+        }
+
+        Write-Host "App process stayed up for 10 seconds"
+        Stop-Process -Id $proc.Id -Force
+
+        Write-Host "=== stdout ==="
+        Get-Content 'out.log'
+
+        Write-Host "=== stderr ==="
+        Get-Content 'err.log'

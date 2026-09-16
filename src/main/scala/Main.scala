@@ -223,4 +223,6 @@ import KotlinInterop.given
     frame.setContentPane(grid)
     frame.getAppWindow().setSize(new WDimension(800, 600))
     frame.setVisible(true)
+
+    System.out.println("App Started")
   }
