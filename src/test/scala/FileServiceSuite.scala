@@ -1,3 +1,5 @@
+package file
+
 import java.nio.file.{Files, Path}
 import java.util.concurrent.{CountDownLatch, TimeUnit, TimeoutException}
 
@@ -6,6 +8,7 @@ class FileServiceSuite extends munit.FunSuite:
   private var tempDir: Path = null
 
   override def beforeEach(context: BeforeEach): Unit =
+    FileService.resetBusy()
     tempDir = Files.createTempDirectory("fileservice-test-")
 
   override def afterEach(context: AfterEach): Unit =

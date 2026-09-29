@@ -16,6 +16,7 @@ import com.appkitbox.winui4k.{
   VirtualKeyModifier
 }
 import java.nio.file.{Path, Paths}
+import file.FileService
 import KotlinInterop.given
 
 /** winui4k を使ったシンプルなメモ帳アプリケーションのエントリーポイント。 */
