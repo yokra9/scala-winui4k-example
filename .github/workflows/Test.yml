@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 jobs:
   build:
@@ -22,6 +23,15 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: 'sbt'
+
+    - name: Run unit tests
+      run: sbt testFull
+
+    - name: Publish unit test report
+      uses: mikepenz/action-junit-report@v6
+      if: success() || failure() # always run even if the previous step fails
+      with:
+        report_paths: '**/test-reports/TEST-*.xml'
 
     - name: Install the latest Windows App SDK Runtime
       uses: enda-mullally/Install-WindowsAppSDKRuntime@v1.1
