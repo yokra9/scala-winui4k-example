@@ -15,7 +15,7 @@ import com.appkitbox.winui4k.{
   VirtualKey,
   VirtualKeyModifier
 }
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Path, Paths}
 import KotlinInterop.given
 
 /** winui4k を使ったシンプルなメモ帳アプリケーションのエントリーポイント。 */
@@ -32,7 +32,7 @@ import KotlinInterop.given
     val textArea = new WTextField()
 
     // 現在編集中のファイルパス。None の場合は未保存の新規ドキュメント
-    var currentFile: Option[java.nio.file.Path] = None
+    var currentFile: Option[Path] = None
 
     // 改行を受け付けるようにして、プレースホルダーを設定
     textArea.setAcceptsReturn(true)
@@ -49,38 +49,57 @@ import KotlinInterop.given
       dialog.setDefaultButton(ContentDialogButton.PRIMARY)
       dialog.show(textArea, _ => ())
 
+    /** UI スレッドで実行するためのヘルパー。 */
+    def runOnUi(action: => Unit): Unit =
+      WinUiUtilities.INSTANCE.invokeLater { () => action }
+
     /** 指定されたパスに現在のテキストを書き込む。 保存後、currentFile を更新し、ウィンドウタイトルを変更する。
       *
       * @param path
       *   保存先のファイルパス
       */
-    def saveTo(path: java.nio.file.Path): Unit =
-      try
-        Files.writeString(path, textArea.getText())
-        currentFile = Some(path)
-        frame.setTitle(s"${path.getFileName()} - $appName")
-      catch
-        case e: Exception =>
-          showErrorDialog(s"ファイルの保存に失敗しました。\n${e.getMessage}")
+    def saveTo(path: Path): Unit =
+      textArea.setEnabled(false)
+      FileService.save(
+        path,
+        textArea.getText(),
+        savedPath =>
+          runOnUi {
+            currentFile = Some(savedPath)
+            frame.setTitle(s"${savedPath.getFileName} - $appName")
+            textArea.setEnabled(true)
+          },
+        e =>
+          runOnUi {
+            textArea.setEnabled(true)
+            showErrorDialog(s"ファイルの保存に失敗しました。\n${e.getMessage}")
+          }
+      )
 
     /** 指定されたパスのファイルを開いてテキストエリアに読み込む。 ファイルが存在しない場合は何もしない。
       *
       * @param path
       *   開くファイルパス
       */
-    def openFrom(path: java.nio.file.Path): Unit =
-      if !Files.exists(path) then showErrorDialog(s"ファイルが見つかりません。\n${path}")
-      else
-        try
-          textArea.setText(Files.readString(path))
-          currentFile = Some(path)
-          frame.setTitle(s"${path.getFileName()} - $appName")
-        catch
-          case e: Exception =>
+    def openFrom(path: Path): Unit =
+      textArea.setEnabled(false)
+      FileService.open(
+        path,
+        content =>
+          runOnUi {
+            textArea.setText(content)
+            currentFile = Some(path)
+            frame.setTitle(s"${path.getFileName} - $appName")
+            textArea.setEnabled(true)
+          },
+        e =>
+          runOnUi {
+            textArea.setEnabled(true)
             showErrorDialog(s"ファイルの読み込みに失敗しました。\n${e.getMessage}")
+          }
+      )
 
-    /** 「名前を付けて保存」ダイアログを表示する。 winui4k の WContentDialog を使用し、相対パスを手入力して保存する。
-      */
+    /** 「名前を付けて保存」ダイアログを表示する。 winui4k の WContentDialog を使用し、相対パスを手入力して保存する。 */
     def showSaveAsDialog(): Unit =
       val fileNameInput = new WTextField()
       fileNameInput.setPlaceholderText("メモ.txt")
@@ -126,8 +145,7 @@ import KotlinInterop.given
       showOpenDialog()
     }
 
-    /** 「開く」ダイアログを表示する。 winui4k の WContentDialog を使用し、相対パスを手入力してファイルを開く。
-      */
+    /** 「開く」ダイアログを表示する。 winui4k の WContentDialog を使用し、相対パスを手入力してファイルを開く。 */
     def showOpenDialog(): Unit =
       val fileNameInput = new WTextField()
       fileNameInput.setPlaceholderText("メモ.txt")
