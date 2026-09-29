@@ -1,4 +1,6 @@
-import java.nio.file.{Files, Path, Paths}
+package file
+
+import java.nio.file.{Files, Path}
 import java.util.concurrent.CompletableFuture
 
 /** winui4k サンプル用の簡易ファイル入出力サービス。
@@ -9,6 +11,9 @@ object FileService:
 
   /** ファイル入出力処理中は true になり、二重実行を防ぐ。 */
   private var isBusy: Boolean = false
+
+  /** テスト用に isBusy 状態をリセットする。 */
+  private[file] def resetBusy(): Unit = isBusy = false
 
   /** バックグラウンドスレッドで処理を実行し、結果を指定したコールバックに渡す。 */
   private def runInBackground[T](
