@@ -32,3 +32,4 @@ metals.sbt
 /.worksheet/
 
 scala-winui4k-example-assembly.jar
+WindowsAppRuntimeInstall-*.exe
