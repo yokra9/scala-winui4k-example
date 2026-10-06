@@ -1,4 +1,9 @@
+import scala.sys.process._
+import java.net.URI
+import java.io.File
+
 val scala3Version = "3.9.0"
+val windowsAppSdkVersion = "2.4.0"
 
 lazy val root = project
   .in(file("."))
@@ -9,6 +14,7 @@ lazy val root = project
     scalaVersion := scala3Version,
 
     fork := true,
+    Compile / run / javaOptions ++= Seq("--enable-native-access=ALL-UNNAMED"),
 
     assembly / mainClass := Some("main"),
     assembly / assemblyJarName := "scala-winui4k-example-assembly.jar",
@@ -28,3 +34,36 @@ lazy val root = project
 
     testOptions += Tests.Argument(TestFrameworks.MUnit, "+junitxml")
   )
+
+commands += Command.command("downloadInstallers") { state =>
+  val version = windowsAppSdkVersion
+  val base = Project.extract(state).get(baseDirectory)
+  val log = state.log
+  val dir = base
+  dir.mkdirs()
+  for (arch <- Seq("x86", "x64", "arm64")) {
+    val fileName = s"WindowsAppRuntimeInstall-$arch.exe"
+    val dest = dir / fileName
+    if (dest.exists()) {
+      log.info(s"Already exists: $dest")
+    } else {
+      val url =
+        s"https://aka.ms/windowsappsdk/2.4/$version/windowsappruntimeinstall-$arch.exe"
+      log.info(s"Downloading $fileName ...")
+      val conn = URI(url).toURL().openConnection()
+      conn.setRequestProperty("User-Agent", "curl/8.0")
+      val input = conn.getInputStream()
+      try {
+        java.nio.file.Files.copy(
+          input,
+          dest.toPath(),
+          java.nio.file.StandardCopyOption.REPLACE_EXISTING
+        )
+      } finally {
+        input.close()
+      }
+      log.info(s"Downloaded: $dest")
+    }
+  }
+  state
+}
