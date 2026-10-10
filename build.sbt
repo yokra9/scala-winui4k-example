@@ -28,7 +28,7 @@ lazy val root = project
     },
 
     libraryDependencies ++= Seq(
-      "com.appkitbox.winui4k" % "winui4k-all" % "0.1.0",
+      "com.appkitbox.winui4k" % "winui4k-all" % "0.2.0",
       "org.scalameta" %% "munit" % "1.3.6" % Test
     ),
 
