@@ -22,7 +22,7 @@ import KotlinInterop.given
 /** winui4k を使ったシンプルなメモ帳アプリケーションのエントリーポイント。 */
 @main def main(): Unit =
   // WinUI のスレッド上で UI を構築する
-  WinUiUtilities.INSTANCE.invokeLater { () =>
+  WinUiUtilities.invokeLater { () =>
     // アプリケーション名
     val appName = "Scala WinUI4k Example"
 
@@ -52,7 +52,7 @@ import KotlinInterop.given
 
     /** UI スレッドで実行するためのヘルパー。 */
     def runOnUi(action: => Unit): Unit =
-      WinUiUtilities.INSTANCE.invokeLater { () => action }
+      WinUiUtilities.invokeLater { () => action }
 
     /** 指定されたパスに現在のテキストを書き込む。 保存後、currentFile を更新し、ウィンドウタイトルを変更する。
       *
@@ -109,8 +109,8 @@ import KotlinInterop.given
 
       val dialogContent = new WGrid()
       dialogContent.addColumn(GridLength.Companion.star(1.0))
-      dialogContent.addRow(GridLength.Companion.getAUTO())
-      dialogContent.addRow(GridLength.Companion.getAUTO())
+      dialogContent.addRow()
+      dialogContent.addRow()
       dialogContent.add(label, 0, 0, 1, 1)
       dialogContent.add(fileNameInput, 1, 0, 1, 1)
 
@@ -155,8 +155,8 @@ import KotlinInterop.given
 
       val dialogContent = new WGrid()
       dialogContent.addColumn(GridLength.Companion.star(1.0))
-      dialogContent.addRow(GridLength.Companion.getAUTO())
-      dialogContent.addRow(GridLength.Companion.getAUTO())
+      dialogContent.addRow()
+      dialogContent.addRow()
       dialogContent.add(label, 0, 0, 1, 1)
       dialogContent.add(fileNameInput, 1, 0, 1, 1)
 
@@ -233,7 +233,7 @@ import KotlinInterop.given
     // メニュー行とテキストエリア行を縦に配置
     val grid = new WGrid()
     grid.addColumn(GridLength.Companion.star(1.0))
-    grid.addRow(GridLength.Companion.getAUTO()) // メニューバー
+    grid.addRow() // メニューバー
     grid.addRow(GridLength.Companion.star(1.0)) // テキストエリア（残り全体）
     grid.add(menuBar, 0, 0, 1, 1)
     grid.add(textArea, 1, 0, 1, 1)

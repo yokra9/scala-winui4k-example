@@ -3,7 +3,7 @@ import java.net.URI
 import java.io.File
 
 val scala3Version = "3.9.0"
-val windowsAppSdkVersion = "2.4.0"
+val windowsAppSdkVersion = "2.5/2.5.4-experimental"
 
 lazy val root = project
   .in(file("."))
@@ -28,7 +28,7 @@ lazy val root = project
     },
 
     libraryDependencies ++= Seq(
-      "com.appkitbox.winui4k" % "winui4k-all" % "0.1.0",
+      "com.appkitbox.winui4k" % "winui4k-all" % "0.2.0",
       "org.scalameta" %% "munit" % "1.3.6" % Test
     ),
 
@@ -48,7 +48,7 @@ commands += Command.command("downloadInstallers") { state =>
       log.info(s"Already exists: $dest")
     } else {
       val url =
-        s"https://aka.ms/windowsappsdk/2.4/$version/windowsappruntimeinstall-$arch.exe"
+        s"https://aka.ms/windowsappsdk/$version/windowsappruntimeinstall-$arch.exe"
       log.info(s"Downloading $fileName ...")
       val conn = URI(url).toURL().openConnection()
       conn.setRequestProperty("User-Agent", "curl/8.0")
