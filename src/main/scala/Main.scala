@@ -13,9 +13,13 @@ import com.appkitbox.winui4k.{
   WDimension,
   GridLength,
   VirtualKey,
-  VirtualKeyModifier
+  VirtualKeyModifier,
+  WFileOpenPicker,
+  WFileSavePicker,
+  PickerLocationId
 }
 import java.nio.file.{Path, Paths}
+import java.util.function.Consumer
 import file.FileService
 import KotlinInterop.given
 
@@ -100,35 +104,19 @@ import KotlinInterop.given
           }
       )
 
-    /** 「名前を付けて保存」ダイアログを表示する。 winui4k の WContentDialog を使用し、相対パスを手入力して保存する。 */
+    /** 「名前を付けて保存」ダイアログを表示する。 winui4k の WFileSavePicker を使用する。 */
     def showSaveAsDialog(): Unit =
-      val fileNameInput = new WTextField()
-      fileNameInput.setPlaceholderText("メモ.txt")
-
-      val label = new WLabel("ファイル名：")
-
-      val dialogContent = new WGrid()
-      dialogContent.addColumn(GridLength.Companion.star(1.0))
-      dialogContent.addRow()
-      dialogContent.addRow()
-      dialogContent.add(label, 0, 0, 1, 1)
-      dialogContent.add(fileNameInput, 1, 0, 1, 1)
-
-      val dialog = new WContentDialog("名前を付けて保存", dialogContent)
-      dialog.setPrimaryButtonText("保存")
-      dialog.setCloseButtonText("キャンセル")
-      dialog.setDefaultButton(ContentDialogButton.PRIMARY)
-      dialog.show(
-        textArea,
-        result =>
-          if result == ContentDialogResult.PRIMARY then
-            val input = fileNameInput.getText()
-            if input != null && input.trim.nonEmpty then
-              try saveTo(Paths.get(input.trim))
-              catch
-                case e: Exception =>
-                  showErrorDialog(s"ファイル名が無効です。\n${e.getMessage}")
-      )
+      val picker = new WFileSavePicker(frame)
+      picker.setDefaultFileExtension(".txt")
+      picker.setSuggestedStartLocation(PickerLocationId.DOCUMENTS_LIBRARY)
+      picker.pickSaveFile(new Consumer[String] {
+        override def accept(path: String): Unit =
+          if path != null then
+            try saveTo(Paths.get(path))
+            catch
+              case e: Exception =>
+                showErrorDialog(s"ファイル名が無効です。\n${e.getMessage}")
+      })
 
     // [ファイル] メニューの各項目を構築
 
@@ -146,35 +134,19 @@ import KotlinInterop.given
       showOpenDialog()
     }
 
-    /** 「開く」ダイアログを表示する。 winui4k の WContentDialog を使用し、相対パスを手入力してファイルを開く。 */
+    /** 「開く」ダイアログを表示する。 winui4k の WFileOpenPicker を使用する。 */
     def showOpenDialog(): Unit =
-      val fileNameInput = new WTextField()
-      fileNameInput.setPlaceholderText("メモ.txt")
-
-      val label = new WLabel("ファイル名：")
-
-      val dialogContent = new WGrid()
-      dialogContent.addColumn(GridLength.Companion.star(1.0))
-      dialogContent.addRow()
-      dialogContent.addRow()
-      dialogContent.add(label, 0, 0, 1, 1)
-      dialogContent.add(fileNameInput, 1, 0, 1, 1)
-
-      val dialog = new WContentDialog("開く", dialogContent)
-      dialog.setPrimaryButtonText("開く")
-      dialog.setCloseButtonText("キャンセル")
-      dialog.setDefaultButton(ContentDialogButton.PRIMARY)
-      dialog.show(
-        textArea,
-        result =>
-          if result == ContentDialogResult.PRIMARY then
-            val input = fileNameInput.getText()
-            if input != null && input.trim.nonEmpty then
-              try openFrom(Paths.get(input.trim))
-              catch
-                case e: Exception =>
-                  showErrorDialog(s"ファイル名が無効です。\n${e.getMessage}")
-      )
+      val picker = new WFileOpenPicker(frame)
+      picker.addFileTypeFilter(".txt")
+      picker.setSuggestedStartLocation(PickerLocationId.DOCUMENTS_LIBRARY)
+      picker.pickSingleFile(new Consumer[String] {
+        override def accept(path: String): Unit =
+          if path != null then
+            try openFrom(Paths.get(path))
+            catch
+              case e: Exception =>
+                showErrorDialog(s"ファイル名が無効です。\n${e.getMessage}")
+      })
 
     val saveItem = new WMenuFlyoutItem("上書き保存", null)
     saveItem.setKeyboardAcceleratorText("Ctrl+S")

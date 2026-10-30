@@ -33,10 +33,10 @@ jobs:
       with:
         report_paths: '**/test-reports/TEST-*.xml'
 
-    - name: Install the latest Windows App SDK Runtime
-      uses: enda-mullally/Install-WindowsAppSDKRuntime@v1.1
-      with:
-        experimental: false
+    - name: Install Windows App SDK Runtime
+      run: |
+        sbt downloadInstallers
+        .\WindowsAppRuntimeInstall-x64.exe -q 
 
     - name: Build fat JAR
       run: sbt assembly
@@ -71,6 +71,18 @@ jobs:
         }
 
         Write-Host "App process stayed up for 10 seconds"
+
+        if (-not (Test-Path 'out.log') -or (Select-String -Path 'out.log' -Pattern 'App Started' -Quiet) -eq $false) {
+          Write-Host "App Started output was not found"
+          Write-Host "=== stdout ==="
+          Get-Content 'out.log' -ErrorAction SilentlyContinue
+          Write-Host "=== stderr ==="
+          Get-Content 'err.log' -ErrorAction SilentlyContinue
+          Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          exit 1
+        }
+
+        Write-Host "App Started output was confirmed"
         Stop-Process -Id $proc.Id -Force
 
         Write-Host "=== stdout ==="
