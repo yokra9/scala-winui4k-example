@@ -9,6 +9,8 @@ class FileServiceSuite extends munit.FunSuite:
 
   override def beforeEach(context: BeforeEach): Unit =
     FileService.resetBusy()
+    FileService.setOnStartHook(() => ())
+    FileService.setArtificialDelay(0)
     tempDir = Files.createTempDirectory("fileservice-test-")
 
   override def afterEach(context: AfterEach): Unit =
@@ -76,20 +78,27 @@ class FileServiceSuite extends munit.FunSuite:
   test("save prevents concurrent execution") {
     val path1 = tempDir.resolve("first.txt")
     val path2 = tempDir.resolve("second.txt")
-    val latch = CountDownLatch(1)
+    val firstStarted = CountDownLatch(1)
+    val firstDone = CountDownLatch(1)
 
     var firstResult: Option[Path] = None
     var secondCalled = false
+
+    FileService.setArtificialDelay(500)
+    FileService.setOnStartHook(() => firstStarted.countDown())
 
     FileService.save(
       path1,
       "first",
       saved =>
         firstResult = Some(saved)
-        latch.countDown()
+        firstDone.countDown()
       ,
-      _ => latch.countDown()
+      _ => firstDone.countDown()
     )
+
+    // 1回目の処理が開始されるまで待ってから 2回目を呼ぶ
+    firstStarted.await(5, TimeUnit.SECONDS)
 
     FileService.save(
       path2,
@@ -98,7 +107,7 @@ class FileServiceSuite extends munit.FunSuite:
       _ => ()
     )
 
-    latch.await(5, TimeUnit.SECONDS)
+    firstDone.await(5, TimeUnit.SECONDS)
     assertEquals(firstResult, Some(path1))
     assert(!secondCalled, "second save should not be executed while busy")
   }

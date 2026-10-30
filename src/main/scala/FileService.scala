@@ -15,16 +15,31 @@ object FileService:
   /** テスト用に isBusy 状態をリセットする。 */
   private[file] def resetBusy(): Unit = isBusy = false
 
+  /** バックグラウンド処理開始時に呼ばれるフック。 */
+  private var onStartHook: () => Unit = () => ()
+  private[file] def setOnStartHook(hook: () => Unit): Unit = onStartHook = hook
+
+  /** バックグラウンド処理に遅延を入れる。 */
+  private var artificialDelayMillis: Long = 0
+  private[file] def setArtificialDelay(millis: Long): Unit =
+    artificialDelayMillis = millis
+
   /** バックグラウンドスレッドで処理を実行し、結果を指定したコールバックに渡す。 */
   private def runInBackground[T](
       task: => T,
       onSuccess: T => Unit,
       onError: Throwable => Unit
   ): Unit =
-    CompletableFuture.supplyAsync(() => task).whenComplete { (result, error) =>
-      if error != null then onError(error)
-      else onSuccess(result)
-    }
+    CompletableFuture
+      .supplyAsync { () =>
+        onStartHook()
+        if artificialDelayMillis > 0 then Thread.sleep(artificialDelayMillis)
+        task
+      }
+      .whenComplete { (result, error) =>
+        if error != null then onError(error)
+        else onSuccess(result)
+      }
     ()
 
   /** テキストを指定パスに保存する。
